@@ -7,9 +7,56 @@
  * a constraint that doesn't apply to a given surface reports "n/a", never
  * a fabricated pass.
  */
+import { AD_BOARD_COLORS, textColorFor } from "./renderLayout.js";
+import { compositeOver, contrastRatio, parseColor, requiredContrastRatio } from "./contrast.js";
 import type { ResolvedLayout, SurfaceProfile } from "./types.js";
 
 export type CheckResult = "pass" | "fail" | "n/a";
+
+interface ContrastViolation {
+  readonly elementId: string;
+  readonly ratio: number;
+  readonly required: number;
+}
+
+/**
+ * A real WCAG 2.1 contrast check against the ad board's actual fixed
+ * palette (see ./contrast.ts and ./renderLayout.ts's own doc comments) —
+ * not a fabricated pass. "Text" elements use `textColorFor(role)` on the
+ * paper background (secondary role renders as translucent ink, so its
+ * *effective* color — and therefore its ratio — depends on what it's
+ * composited over); "button" elements use the paper-colored label on the
+ * ink-filled pill. Each element's own resolved `fontSize` picks which of
+ * the two WCAG thresholds applies, so a role/size combination that's fine
+ * on a spacious surface can genuinely start failing once a constrained
+ * surface shrinks it below 24px — this isn't a constant true/false, it's
+ * measured per element, per resolution.
+ */
+function checkTextContrast(layout: ResolvedLayout): ContrastViolation[] {
+  const paper = parseColor(AD_BOARD_COLORS.paper);
+  const ink = parseColor(AD_BOARD_COLORS.ink);
+  const violations: ContrastViolation[] = [];
+
+  for (const el of layout.visible) {
+    if (el.type === "text") {
+      const fg = compositeOver(parseColor(textColorFor(el.role)), paper);
+      const ratio = contrastRatio(fg, paper);
+      const required = requiredContrastRatio(el.fontSize);
+      if (ratio < required) violations.push({ elementId: el.id, ratio, required });
+    } else if (el.type === "button") {
+      // The label is always the opaque, un-translucent --paper color, so
+      // compositing is a no-op here — going through the same
+      // compositeOver()/contrastRatio() path anyway keeps this branch
+      // structurally identical to the "text" one rather than special-cased.
+      const fg = compositeOver(parseColor(AD_BOARD_COLORS.paper), ink);
+      const ratio = contrastRatio(fg, ink);
+      const required = requiredContrastRatio(el.fontSize);
+      if (ratio < required) violations.push({ elementId: el.id, ratio, required });
+    }
+  }
+
+  return violations;
+}
 
 export interface Check {
   readonly label: string;
@@ -82,6 +129,21 @@ export function buildConstraintChecks(layout: ResolvedLayout, surface: SurfacePr
     });
   } else {
     checks.push({ label: "Minimum text size", detail: "Surface doesn't set a minimum text size.", result: "n/a" });
+  }
+
+  const textLikeVisible = layout.visible.filter((el) => el.type === "text" || el.type === "button");
+  if (textLikeVisible.length === 0) {
+    checks.push({ label: "Text contrast (WCAG)", detail: "No text or button elements in this layout.", result: "n/a" });
+  } else {
+    const violations = checkTextContrast(layout);
+    checks.push({
+      label: "Text contrast (WCAG)",
+      detail:
+        violations.length === 0
+          ? "Every text/button element meets its WCAG 2.1 threshold (4.5:1, or 3:1 at 24px+)."
+          : `${violations.length} element(s) below their required ratio (worst: ${Math.min(...violations.map((v) => v.ratio)).toFixed(2)}:1, needs ${Math.max(...violations.map((v) => v.required)).toFixed(1)}:1).`,
+      result: violations.length === 0 ? "pass" : "fail",
+    });
   }
 
   return checks;
