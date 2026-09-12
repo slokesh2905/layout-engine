@@ -1,0 +1,121 @@
+.surface-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  padding: 5px;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--bg1);
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+}
+
+.surface-toolbar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+}
+
+.surface-toolbar__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px 7px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--tx2);
+}
+
+.surface-toolbar__chip:hover {
+  color: var(--tx);
+}
+
+.surface-toolbar__chip--active {
+  border-color: var(--line2);
+  background: var(--acdim);
+  color: var(--tx);
+}
+
+.surface-toolbar__glyph-outer {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.surface-toolbar__glyph {
+  display: block;
+  border: 1px solid currentColor;
+  border-radius: 1.5px;
+  opacity: 0.6;
+}
+
+.surface-toolbar__glyph--dashed {
+  width: 12px;
+  height: 12px;
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.surface-toolbar__glyph--active {
+  opacity: 1;
+}
+
+.surface-toolbar__chip-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.surface-toolbar__chip-name {
+  font-size: 12px;
+}
+
+.surface-toolbar__chip-dims {
+  font-size: 9.5px;
+  opacity: 0.65;
+}
+
+.surface-toolbar__divider {
+  width: 1px;
+  height: 26px;
+  background: var(--line);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.surface-toolbar__toggle {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--tx3);
+}
+
+.surface-toolbar__toggle:hover {
+  color: var(--tx);
+}
+
+.surface-toolbar__toggle--on {
+  border-color: var(--line2);
+  background: var(--acdim);
+  color: var(--tx);
+}
+
+.surface-toolbar__toggle--zoom {
+  width: auto;
+  padding: 0 8px;
+  font-size: 10.5px;
+}

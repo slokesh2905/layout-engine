@@ -1,0 +1,120 @@
+/**
+ * Design tokens for the Adaptive Layout Studio shell — redesigned as a
+ * black & grey control-room aesthetic (two themes, dark default) with a
+ * single neutral accent role. State reads through fill, border weight and
+ * mono badges, never through hue: there is no coral/cyan/amber/red left as
+ * an actual color — the names below are kept as aliases (mapped onto the
+ * neutral scale) purely so every existing component keeps working without
+ * a hue anywhere in the app.
+ */
+:root {
+  /* -- Chrome (dark, default) ------------------------------------------- */
+  --bg: #0a0a0b;
+  --bg1: #101012;
+  --bg2: #161618;
+  --line: #232326;
+  --line2: #33333a;
+
+  --tx: #f0f0f1;
+  --tx2: #9d9da5;
+  --tx3: #74747d;
+
+  --ac: #ffffff;
+  --acdim: rgba(255, 255, 255, 0.08);
+
+  /* -- The "ad board" is always paper, independent of the app theme ----- */
+  --paper: #eceae4;
+  --paper-dim: #e2ded4;
+  --paper-line: #d3cebd;
+  --ink: #17171a;
+  --ink-dim: rgba(23, 23, 26, 0.55);
+
+  /* Ad-board element colours — defined here only, never overridden in
+     [data-theme="light"], so the rendered ad always looks the same
+     regardless of which app theme is active. The board is always
+     --paper-coloured, so CTA buttons always use ink-fill + paper-label. */
+  --ad-cta-bg: var(--ink);
+  --ad-cta-label: var(--paper);
+
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-panel: var(--shadow);
+
+  /* -- Typography ---------------------------------------------------------- */
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+
+  /* -- Geometry ------------------------------------------------------------ */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --border-thin: 1px solid var(--line);
+  --border-thin-strong: 1px solid var(--line2);
+
+  --sidebar-width: 240px;
+  --panel-width: 320px;
+
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-med: 300ms;
+  --duration-slow: 500ms;
+
+  /* Dot-grid background used behind a couple of the surviving dashboard pages */
+  --dot-grid: radial-gradient(circle, var(--line2) 1px, transparent 1px);
+
+  /* -----------------------------------------------------------------------
+   * Legacy role aliases. These names are what SpecsPage/SurfacesPage/
+   * ValidationPage/AppSidebar/StudioShell were already written against —
+   * none of that markup changed, so rather than touch a dozen unrelated
+   * files, every old hue collapses onto the new neutral scale here. That's
+   * the point: the whole app goes monochrome, not just the Layout Studio
+   * screen.
+   * --------------------------------------------------------------------- */
+  --ink-950: var(--bg);
+  --ink-900: var(--bg1);
+  --ink-850: var(--bg1);
+  --ink-800: var(--bg2);
+  --ink-750: var(--bg2);
+  --ink-700: var(--line2);
+  --ink-border: var(--line);
+  --ink-border-strong: var(--line2);
+  --ink-text: var(--tx);
+  --ink-text-dim: var(--tx2);
+  --ink-text-faint: var(--tx3);
+
+  --canvas-bg: var(--paper);
+  --canvas-bg-dim: var(--paper-dim);
+  --canvas-line: var(--paper-line);
+  --canvas-text: var(--ink);
+  --canvas-text-dim: var(--ink-dim);
+
+  --coral: var(--ac);
+  --coral-strong: var(--tx);
+  --coral-dim: var(--acdim);
+  --cyan: var(--tx2);
+  --cyan-dim: var(--acdim);
+  --amber: var(--tx2);
+  --amber-dim: var(--acdim);
+  --red: var(--tx);
+  --red-dim: var(--acdim);
+  --muted: var(--tx3);
+  --muted-dim: var(--acdim);
+  --accent: var(--ac);
+  --accent-dim: var(--acdim);
+}
+
+[data-theme="light"] {
+  --bg: #e9e8e4;
+  --bg1: #f6f5f3;
+  --bg2: #ffffff;
+  --line: #dddbd6;
+  --line2: #c5c4bf;
+
+  --tx: #17171a;
+  --tx2: #63636a;
+  --tx3: #8b8b93;
+
+  --ac: #17171a;
+  --acdim: rgba(0, 0, 0, 0.06);
+
+  --shadow: 0 18px 44px rgba(0, 0, 0, 0.12);
+}

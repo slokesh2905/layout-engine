@@ -1,0 +1,221 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-950);
+  color: var(--ink-text);
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+::selection {
+  background: var(--acdim);
+}
+
+/* Slim, dark scrollbars so the studio chrome never gets a light-mode scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ink-border-strong);
+  border-radius: var(--radius-sm);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 1px solid var(--tx);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Shared micro-animations                                                  */
+/* ------------------------------------------------------------------------ */
+
+@keyframes studio-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes studio-row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes studio-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.reveal {
+  animation: studio-reveal var(--duration-med) var(--ease-standard) both;
+}
+
+.row-in {
+  animation: studio-row-in var(--duration-fast) var(--ease-standard) both;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Shared ui/ primitives: Badge, StatusDot                                  */
+/* ------------------------------------------------------------------------ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.badge-priority {
+  text-transform: uppercase;
+}
+
+.status-dot-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-text-dim);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot--pulse {
+  animation: studio-pulse 1.6s var(--ease-standard) infinite;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Loading skeletons — shared by any panel waiting on the adapter           */
+/* ------------------------------------------------------------------------ */
+
+.skeleton-text,
+.skeleton-row {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: var(--ink-border-strong);
+  opacity: 0.5;
+  animation: studio-pulse 1.6s var(--ease-standard) infinite;
+}
+
+.skeleton-text {
+  width: 88px;
+  height: 11px;
+}
+
+.skeleton-row {
+  width: 100%;
+  height: 34px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* App-level fallback                                                       */
+/* ------------------------------------------------------------------------ */
+
+.app-not-found {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--ink-text-dim);
+  padding: 24px;
+}
+
+.app-not-found h1 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink-text);
+}

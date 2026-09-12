@@ -1,0 +1,16 @@
+.studio-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 10.5px;
+  color: var(--tx3);
+  letter-spacing: 0.04em;
+}
+
+.studio-footer__item--dim {
+  color: var(--tx2);
+}
+
+.studio-footer__item--accent {
+  color: var(--tx);
+}

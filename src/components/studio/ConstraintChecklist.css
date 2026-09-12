@@ -1,0 +1,58 @@
+/**
+ * Owns its own stylesheet (rather than borrowing ResolutionPanel.css, which
+ * it used to) because <ConstraintChecklist> is shared by the Layout
+ * Studio's Checks tab AND the /validation page — it needs to render
+ * correctly with only its own component imported.
+ */
+.constraint-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.constraint-checklist__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.constraint-checklist__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--tx2);
+}
+
+.constraint-checklist__row--fail .constraint-checklist__icon {
+  color: var(--tx);
+}
+
+.constraint-checklist__row--na .constraint-checklist__icon {
+  color: var(--tx3);
+}
+
+.constraint-checklist__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.constraint-checklist__label {
+  font-size: 12px;
+  color: var(--tx);
+}
+
+.constraint-checklist__row--na .constraint-checklist__label {
+  color: var(--tx3);
+}
+
+.constraint-checklist__row--fail .constraint-checklist__label {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.constraint-checklist__detail {
+  font-size: 10.5px;
+  color: var(--tx3);
+}
