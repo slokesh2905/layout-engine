@@ -18,6 +18,21 @@ interface BaseElementSpec {
    * each other; there is no separate grouping/layout-hint field.
    */
   readonly priority: number;
+  /**
+   * Optional override of resolver.ts's role-based default weight (its
+   * `ROLE_WEIGHT` table) for this one element. Weight only ever affects
+   * how *already-available* space is split between elements that survive
+   * degradation — proportionally, on both the main axis (elements sharing
+   * a slot) and the cross axis (members within a slot) — it has no effect
+   * on priority/degradation ordering (which whole slots get dropped is
+   * still purely `priority`-driven, unaffected by this field). Absent (the
+   * common case) means "use this element's role's default weight," the
+   * exact prior behavior for every existing spec. Must be a positive,
+   * finite number when present — a spec author claiming more or less
+   * share of space for one specific element than its role would normally
+   * get, without redefining what that role means everywhere else it's used.
+   */
+  readonly weight?: number;
 }
 
 export interface TextElementSpec extends BaseElementSpec {
@@ -76,6 +91,10 @@ export function defineAd(config: DefineAdConfig): AdSpec {
       throw new Error(`defineAd(): element "${element.id}" has invalid priority ${element.priority} — must be a positive integer.`);
     }
 
+    if (element.weight !== undefined && !(Number.isFinite(element.weight) && element.weight > 0)) {
+      throw new Error(`defineAd(): element "${element.id}" has invalid weight ${element.weight} — must be a positive, finite number when set.`);
+    }
+
     if (element.type === "text" && element.text.trim().length === 0) {
       throw new Error(`defineAd(): text element "${element.id}" has empty \`text\`.`);
     }
@@ -107,4 +126,16 @@ export function elementContent(element: AdElementSpec): string {
     case "image":
       return element.alt;
   }
+}
+
+/**
+ * Companion to `elementContent()` above: that function always returns a
+ * *displayable string* for any element (an image's alt text stands in for
+ * pixels it doesn't have) — this one returns the actual asset reference,
+ * for a renderer that *can* show real pixels (a user-uploaded or externally
+ * hosted image) to point an `<img>` at. `undefined` for text/button
+ * elements, which have no asset of their own.
+ */
+export function elementSrc(element: AdElementSpec): string | undefined {
+  return element.type === "image" ? element.src : undefined;
 }

@@ -16,6 +16,7 @@ export type IconName =
   | "validation"
   | "assets"
   | "chevron-down"
+  | "chevron-up"
   | "chevron-right"
   | "eye"
   | "grid"
@@ -43,7 +44,10 @@ export type IconName =
   | "corners"
   | "bounding-box"
   | "cursor-click"
-  | "panel-right";
+  | "panel-right"
+  | "duplicate"
+  | "undo"
+  | "redo";
 
 interface IconProps extends SVGProps<SVGSVGElement> {
   readonly name: IconName;
@@ -83,6 +87,7 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   "chevron-down": <path d="m4.5 6.5 4.5 5 4.5-5" />,
+  "chevron-up": <path d="m4.5 11.5 4.5-5 4.5 5" />,
   "chevron-right": <path d="m6.5 4.5 5 4.5-5 4.5" />,
   eye: (
     <>
@@ -225,6 +230,24 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <rect x="2.5" y="3.5" width="13" height="11" rx="1.2" />
       <path d="M11.5 3.5v11" />
+    </>
+  ),
+  duplicate: (
+    <>
+      <rect x="6.5" y="2.5" width="9" height="9" rx="1.3" />
+      <rect x="2.5" y="6.5" width="9" height="9" rx="1.3" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M4.5 9a5.5 5.5 0 1 0 1.6-3.9" />
+      <path d="M4.5 4.5v3.6h3.6" />
+    </>
+  ),
+  redo: (
+    <>
+      <path d="M13.5 9a5.5 5.5 0 1 1-1.6-3.9" />
+      <path d="M13.5 4.5v3.6h-3.6" />
     </>
   ),
 };

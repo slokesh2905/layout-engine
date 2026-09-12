@@ -219,3 +219,41 @@ a {
   font-size: 18px;
   color: var(--ink-text);
 }
+
+.watermark {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-text-dim);
+  z-index: 9999;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.watermark-links {
+  display: flex;
+  gap: 12px;
+}
+
+.watermark-links a {
+  pointer-events: auto;
+  color: var(--ink-text-dim);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.watermark-links a:hover {
+  color: var(--ink-text);
+}
+
+.watermark-links svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}

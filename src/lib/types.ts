@@ -54,6 +54,8 @@ export interface AdSpecSummary {
   readonly degradableCount: number;
   readonly lastResolvedAt: string | null;
   readonly status: SpecStatus;
+  /** True for specs added via Import / New this session; false for built-in demo specs. */
+  readonly isCustom: boolean;
 }
 
 /** A spec-level element (before resolution) — used for the full roster the inspector shows, including anything a given surface ends up dropping. */
@@ -64,6 +66,20 @@ export interface StudioElement {
   readonly priority: number;
   /** Resolved from the spec's own text/label/alt field — never invented. */
   readonly content: string;
+  /**
+   * The element's own image src (image elements only) — from spec.ts's
+   * `elementSrc()`. `content` alone can't drive a real `<img>`: for an
+   * image element it's the *alt* text, not the asset reference.
+   */
+  readonly src?: string;
+  /**
+   * This element's own effective `weight` field (../spec.js), if the
+   * *current* spec sets one — already reflecting any live local override
+   * (see localResolve.ts's `applyWeightOverrides`), same as `priority`
+   * above already reflects `priorityOverrides`. Undefined means "this
+   * role's resolver.ts default," not "zero."
+   */
+  readonly weight?: number;
 }
 
 export interface RecentResolution {
@@ -86,6 +102,16 @@ export interface StudioResolution {
   readonly layout: ResolvedLayout;
   /** Resolver-derived, spec-driven — see resolver.ts's describeDegradationOrder(). */
   readonly degradationOrder: readonly string[];
+  /**
+   * The real, unmodified `AdSpec` this resolution was computed from —
+   * carried alongside the summarized `elements` roster so a caller (e.g.
+   * "Export Spec", see specFile.ts) can reconstruct a faithful,
+   * re-importable spec file without a second adapter round-trip.
+   * `StudioElement.content` alone can't do this: an image element's `src`
+   * doesn't survive that flattening, only its `alt` does. Additive field —
+   * nothing above reads or requires it.
+   */
+  readonly rawSpec: AdSpec;
 }
 
 export interface StudioAdSpec {
