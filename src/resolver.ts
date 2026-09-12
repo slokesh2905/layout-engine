@@ -104,13 +104,31 @@ export interface ResolvedLayout {
 // any surface — the same table is consulted for every surface.
 // ---------------------------------------------------------------------------
 
-const ROLE_WEIGHT: Record<ElementRole, number> = {
+// Exported (read-only) so a UI can show a per-element weight override
+// input's placeholder as "this role's actual default" instead of a second,
+// hand-copied table — see SpecInspector.tsx. Exporting a const table
+// changes nothing about how resolveLayout() itself behaves.
+export const ROLE_WEIGHT: Record<ElementRole, number> = {
   hero: 3,
   primary: 2,
   action: 1.2,
   secondary: 1,
   branding: 0.6,
 };
+
+/**
+ * An element's effective weight: its own `weight` override (spec.ts) when
+ * set, else its role's table default — the exact prior expression,
+ * `ROLE_WEIGHT[element.role]`, for every element that doesn't set one.
+ * Weight only ever feeds `distribute()` below (how already-available space
+ * is split among survivors); it's never consulted by Pass 2's degradation
+ * decision (`slotMinMainSize`, which whole slots get dropped), so
+ * overriding one element's weight changes how generously it's sized, never
+ * whether it — or its slot-mates — survive.
+ */
+function elementWeight(element: AdElementSpec): number {
+  return element.weight ?? ROLE_WEIGHT[element.role];
+}
 
 const ROLE_MIN_MAIN_SIZE: Record<ElementRole, number> = {
   hero: 40,
@@ -257,7 +275,7 @@ function groupIntoSlots(elements: readonly AdElementSpec[]): Slot[] {
 }
 
 function slotWeight(slot: Slot): number {
-  return slot.members.reduce((sum, m) => sum + ROLE_WEIGHT[m.role], 0);
+  return slot.members.reduce((sum, m) => sum + elementWeight(m), 0);
 }
 
 function slotMinMainSize(slot: Slot, surface: SurfaceProfile): number {
@@ -426,7 +444,7 @@ export function resolveLayout(spec: AdSpec, surface: SurfaceProfile): ResolvedLa
     }
 
     const memberCrossSizes = distribute(
-      slot.members.map((m) => ({ weight: ROLE_WEIGHT[m.role], min: elementMinCrossSize(m, surface) })),
+      slot.members.map((m) => ({ weight: elementWeight(m), min: elementMinCrossSize(m, surface) })),
       crossSize,
     );
 
@@ -444,8 +462,37 @@ export function resolveLayout(spec: AdSpec, surface: SurfaceProfile): ResolvedLa
           : { x: mainStart, y: crossStart, width: roundedSlotMainSize, height: roundedMemberCrossSize };
 
       const heightForFont = axis === "vertical" ? roundedSlotMainSize : roundedMemberCrossSize;
+      
+      let textLength = 10;
+      let textContent = "";
+      if (member.type === "text" && "text" in member) textContent = String((member as any).text);
+      if (member.type === "button" && "label" in member) textContent = String((member as any).label);
+      if (textContent) {
+        textLength = textContent.length;
+      }
+      textLength = Math.max(4, textLength);
+
+      const area = rect.width * rect.height;
+      const areaFontSize = Math.sqrt(area / textLength) * 0.9;
+      const heightFontSize = heightForFont * FONT_SIZE_TO_HEIGHT_RATIO;
+      
+      let maxWordLength = 4;
+      if (textContent) {
+        const words = textContent.split(/\s+/);
+        maxWordLength = Math.max(...words.map(w => w.length));
+      }
+      
+      // Buttons do not wrap in this renderer, so we must fit their entire length.
+      // Text elements wrap, so we only strictly need to fit their longest word horizontally.
+      const horizontalFitLength = member.type === "button" ? textLength : maxWordLength;
+      
+      // Ensure the text fits horizontally (char width ~ 0.6 * fontSize).
+      // We reserve 10% of the box width as safe padding (essential for pill-shaped buttons).
+      const safeWidth = rect.width * 0.9;
+      const maxHorizontalFontSize = safeWidth / (horizontalFitLength * 0.6);
+      
       const minTextFloor = surface.minTextSize ?? 0;
-      const fontSize = Math.max(minTextFloor, Math.round(heightForFont * FONT_SIZE_TO_HEIGHT_RATIO));
+      const fontSize = Math.max(minTextFloor, Math.round(Math.min(heightFontSize, areaFontSize, maxHorizontalFontSize)));
 
       const crossFloor = elementMinCrossSize(member, surface);
       const crossAxisAtFloor = memberCrossSize - crossFloor < 0.5;
