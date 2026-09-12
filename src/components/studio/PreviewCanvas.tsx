@@ -27,6 +27,139 @@ import { formatDimensions, formatPriority } from "../../lib/formatters.js";
 import type { CanvasToggles, ResolvedElementLayout, ResolvedLayout, StudioElement, ZoomMode } from "../../lib/types.js";
 import "./PreviewCanvas.css";
 
+/**
+ * FLIP-style transitions for whichever `ResolvedLayout` this canvas is
+ * currently given — switching surfaces (or any other cause of a
+ * re-resolve: a content edit, undo/redo, Compare mode's second pane) is
+ * "just" a new `layout.visible` array to this component. Persisting
+ * elements already animate their move via the plain CSS transition on
+ * `.resolved-element` (left/top/width/height) since they keep the same
+ * React key (element id) across renders — nothing new needed there. What
+ * *is* new: an element that a surface switch drops or reintroduces used to
+ * just vanish/pop in, because React unmounts/mounts it outright the moment
+ * it leaves/enters `layout.visible`. This hook keeps a dropped element
+ * mounted a little longer (fading + shrinking out) and mounts a newly
+ * placed one starting from that same faded/shrunk state before flipping it
+ * to visible on the next paint, entirely client-side, entirely layered on
+ * top of the resolver's own `visible`/`dropped` split — nothing here
+ * changes which elements the resolver placed, only how their appearance
+ * and disappearance is presented.
+ */
+type ElementTransitionPhase = "entering" | "visible" | "exiting";
+
+interface AnimatedElementEntry {
+  readonly element: ResolvedElementLayout;
+  readonly phase: ElementTransitionPhase;
+}
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReduced(query.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
+function useAnimatedElements(visible: readonly ResolvedElementLayout[]): readonly AnimatedElementEntry[] {
+  const reducedMotion = usePrefersReducedMotion();
+  const [entries, setEntries] = useState<Map<string, AnimatedElementEntry>>(
+    () => new Map(visible.map((el) => [el.id, { element: el, phase: "visible" as const }])),
+  );
+  const pendingRemovals = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => {
+    setEntries((prev) => {
+      const next = new Map(prev);
+      const visibleIds = new Set(visible.map((el) => el.id));
+
+      // No longer resolved as visible: with motion allowed, keep the entry
+      // around one more beat marked "exiting" (fades + shrinks via CSS,
+      // then a timeout deletes it for real); with reduced motion, drop it
+      // immediately — there's no animated state to hold it in.
+      for (const [id, entry] of prev) {
+        if (visibleIds.has(id) || entry.phase === "exiting") continue;
+        if (reducedMotion) {
+          next.delete(id);
+          continue;
+        }
+        next.set(id, { element: entry.element, phase: "exiting" });
+        const existingTimeout = pendingRemovals.current.get(id);
+        if (existingTimeout) clearTimeout(existingTimeout);
+        pendingRemovals.current.set(
+          id,
+          setTimeout(() => {
+            pendingRemovals.current.delete(id);
+            setEntries((current) => {
+              const copy = new Map(current);
+              copy.delete(id);
+              return copy;
+            });
+          }, ELEMENT_TRANSITION_MS),
+        );
+      }
+
+      // Newly resolved as visible: a genuinely new id starts "entering"
+      // (or straight to "visible" under reduced motion); an id that was
+      // mid-exit and came back (rapid surface toggling) cancels its
+      // pending removal and resumes as visible instead of restarting an
+      // entrance animation from a still-faded state.
+      for (const el of visible) {
+        const existing = prev.get(el.id);
+        if (!existing) {
+          next.set(el.id, { element: el, phase: reducedMotion ? "visible" : "entering" });
+          continue;
+        }
+        const pendingTimeout = pendingRemovals.current.get(el.id);
+        if (pendingTimeout) {
+          clearTimeout(pendingTimeout);
+          pendingRemovals.current.delete(el.id);
+        }
+        next.set(el.id, { element: el, phase: existing.phase === "exiting" ? "visible" : existing.phase });
+      }
+
+      return next;
+    });
+  }, [visible, reducedMotion]);
+
+  // A freshly-"entering" entry needs two distinct paints to actually
+  // transition (mount at the faded/shrunk state, then move to the resting
+  // state) rather than skip straight to it — flip it to "visible" on the
+  // next animation frame, once the browser has had a chance to paint the
+  // entering state first.
+  useEffect(() => {
+    const enteringIds = [...entries.values()].filter((entry) => entry.phase === "entering").map((entry) => entry.element.id);
+    if (enteringIds.length === 0) return;
+    const frame = requestAnimationFrame(() => {
+      setEntries((prev) => {
+        const next = new Map(prev);
+        for (const id of enteringIds) {
+          const entry = next.get(id);
+          if (entry && entry.phase === "entering") next.set(id, { element: entry.element, phase: "visible" });
+        }
+        return next;
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [entries]);
+
+  // Clear any outstanding removal timers on unmount (e.g. navigating away
+  // from the Studio mid-transition) so they don't fire a setState after
+  // this component is gone.
+  useEffect(
+    () => () => {
+      for (const timeout of pendingRemovals.current.values()) clearTimeout(timeout);
+      pendingRemovals.current.clear();
+    },
+    [],
+  );
+
+  return useMemo(() => [...entries.values()], [entries]);
+}
+
 interface PreviewCanvasProps {
   readonly layout: ResolvedLayout;
   readonly elements: readonly StudioElement[];
@@ -43,6 +176,12 @@ interface PreviewCanvasProps {
 const CANVAS_PADDING = 56;
 const MIN_SCALE = 0.05;
 const MAX_FIT_SCALE = 6;
+
+// Mirrors `--duration-med` in tokens.css (see PreviewCanvas.css's
+// `.resolved-element--entering`/`--exiting` rules) — kept in sync there
+// rather than read from computed styles, same reasoning textMeasure.ts's
+// LINE_HEIGHT_RATIO already documents for its own CSS-mirroring constant.
+const ELEMENT_TRANSITION_MS = 300;
 
 function useContainerSize<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
@@ -76,6 +215,7 @@ export function PreviewCanvas({
   resolving = false,
 }: PreviewCanvasProps) {
   const { ref: containerRef, size: containerSize } = useContainerSize<HTMLDivElement>();
+  const animatedElements = useAnimatedElements(layout.visible);
 
   const contentLookup = useMemo(() => {
     const map = new Map<string, StudioElement>();
@@ -112,13 +252,15 @@ export function PreviewCanvas({
               style={{ width: layout.surfaceWidth, height: layout.surfaceHeight, transform: `scale(${scale})` }}
               onClick={(event: MouseEvent<HTMLDivElement>) => event.stopPropagation()}
             >
-              {layout.visible.map((element) => {
+              {animatedElements.map(({ element, phase }) => {
                 const content = contentLookup.get(element.id);
                 return (
                   <ResolvedElementView
                     key={element.id}
                     element={element}
+                    transitionPhase={phase}
                     content={content?.content ?? ""}
+                    src={content?.src}
                     priority={content?.priority ?? 0}
                     selected={element.id === selectedElementId}
                     hovered={element.id === hoveredElementId}

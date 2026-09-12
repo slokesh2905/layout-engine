@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 24px 24px 80px 24px;
 }
 
 .preview-canvas__column {
@@ -40,7 +40,14 @@
   border-radius: 2px;
   box-shadow: var(--shadow);
   overflow: hidden;
-  transition: width var(--duration-slow) var(--ease-standard), height var(--duration-slow) var(--ease-standard);
+  /* `transform` (the fit-to-viewport scale, applied inline) animates
+     alongside width/height so a surface switch reads as one continuous
+     resize of the whole board, not a size change that snaps to its new
+     scale before the box itself finishes resizing. */
+  transition:
+    width var(--duration-slow) var(--ease-standard),
+    height var(--duration-slow) var(--ease-standard),
+    transform var(--duration-slow) var(--ease-standard);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -62,12 +69,31 @@
   overflow: hidden;
   outline: none;
   cursor: pointer;
+  opacity: 1;
+  transform: scale(1);
   transition:
     box-shadow var(--duration-fast) var(--ease-standard),
+    opacity var(--duration-med) var(--ease-standard),
+    transform var(--duration-med) var(--ease-standard),
     left var(--duration-slow) var(--ease-standard),
     top var(--duration-slow) var(--ease-standard),
     width var(--duration-slow) var(--ease-standard),
     height var(--duration-slow) var(--ease-standard);
+}
+
+/*
+ * FLIP-style enter/exit for elements a surface switch (or any other
+ * re-resolve) adds or drops — see PreviewCanvas.tsx's `useAnimatedElements()`.
+ * A persisting element already animates its move via the left/top/width/
+ * height transition above (same DOM node, same React key); these two
+ * classes are only ever applied for the brief window an element is being
+ * mounted in or is about to be unmounted.
+ */
+.resolved-element--entering,
+.resolved-element--exiting {
+  opacity: 0;
+  transform: scale(0.92);
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -82,10 +108,20 @@
 }
 
 .resolved-element__text {
+  display: flex;
+  flex-direction: column;
   color: var(--canvas-text);
   font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.1;
+  max-width: 100%;
+  transition: font-size var(--duration-slow) var(--ease-standard);
+}
+
+/* One real wrapped line (see ../../lib/textMeasure.ts) — the ellipsis
+   fallback here only ever fires for a single word wider than the box
+   itself, since textMeasure.ts already wraps at word boundaries to fit. */
+.resolved-element__text-line {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -111,6 +147,7 @@
   font-family: var(--font-display);
   font-weight: 600;
   white-space: nowrap;
+  transition: font-size var(--duration-slow) var(--ease-standard);
 }
 
 .resolved-element--image .resolved-element__image-placeholder,
@@ -128,6 +165,13 @@
   width: 100%;
   height: 100%;
   color: var(--canvas-text-dim);
+}
+
+.resolved-element__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .resolved-element__image-alt {
