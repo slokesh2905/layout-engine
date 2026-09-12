@@ -139,9 +139,8 @@ This suite exercises `resolver.ts`/`spec.ts` only, and every Studio-facing addit
 ## Limitations
 
 - **Fixed element type set** (`text` / `image` / `button`) and **fixed role set** (five roles) — extending either means editing `spec.ts`'s union and `resolver.ts`'s weight/floor tables, not just data.
-- **No text-measurement-aware wrapping.** Font size is estimated from resolved box height (`height * 0.55`, clamped to `minTextSize`); it doesn't measure actual rendered text width, so a very long headline in a narrow slot may visually overflow its box even though the *box itself* never overlaps a neighbor. Listed as a bonus in the brief, intentionally out of scope here.
+
 - **Uniform role-weight table**, not per-ad customizable. Two elements with the same role always compete for space identically regardless of their specific content.
-- **No animated transition** between surfaces (also listed as a bonus) — the Studio does animate its own chrome (page-load reveal, staggered list rows, a "Resolving…" pill during a fetch), but does not crossfade/tween the ad's own element positions between two different resolved layouts.
 - **Axis tie-break is fixed** (square → horizontal) rather than configurable.
 - **Cross-axis members within a slot never degrade individually** — only whole slots drop (see "cross-axis floor" above); a slot that's cross-infeasible throws rather than trying to drop one of its co-equal-priority members, since choosing *which* one would require author intent the spec doesn't currently express.
 - **The Studio's element roster shows a drag handle but doesn't support reordering** — the resolver places elements purely from `priority`/`role`, and this build doesn't let the UI mutate a spec.
