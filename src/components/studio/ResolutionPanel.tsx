@@ -163,18 +163,19 @@ export function ResolutionPanel({
 
   return (
     <div className="resolution-panel">
-      <div className="resolution-panel__tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={`resolution-panel__tab${tab === t.id ? " resolution-panel__tab--active" : ""}`}
-            onClick={() => onTabChange(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-        <div className="resolution-panel__tabs-spacer" />
+      <div className="resolution-panel__header">
+        <div className="resolution-panel__tabs">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`resolution-panel__tab${tab === t.id ? " resolution-panel__tab--active" : ""}`}
+              onClick={() => onTabChange(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
         <button type="button" className="resolution-panel__collapse" title="Collapse" onClick={onClose}>
           <Icon name="chevron-right" size={14} />
         </button>

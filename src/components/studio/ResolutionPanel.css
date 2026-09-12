@@ -9,12 +9,27 @@
   overflow: hidden;
 }
 
+.resolution-panel__header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px 0;
+  flex-shrink: 0;
+  border-bottom: var(--border-thin);
+}
+
 .resolution-panel__tabs {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 10px 12px 0;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  padding-bottom: 10px;
+}
+
+.resolution-panel__tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .resolution-panel__tab {
@@ -23,6 +38,8 @@
   background: transparent;
   color: var(--tx3);
   font-size: 11.5px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .resolution-panel__tab--active {
@@ -30,17 +47,16 @@
   color: var(--tx);
 }
 
-.resolution-panel__tabs-spacer {
-  flex: 1 1 auto;
-}
-
 .resolution-panel__collapse {
+  flex-shrink: 0;
   width: 26px;
   height: 26px;
   display: grid;
   place-items: center;
   background: transparent;
   color: var(--tx3);
+  margin-left: 8px;
+  margin-bottom: 10px;
 }
 
 .resolution-panel__collapse:hover {
