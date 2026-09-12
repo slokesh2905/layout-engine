@@ -279,6 +279,43 @@
   gap: 10px;
 }
 
+/* -- Campaign (meta) tab ----------------------------------------------------- */
+
+.resolution-panel__meta-tab {
+  display: flex;
+  flex-direction: column;
+}
+
+.resolution-panel__meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+
+.resolution-panel__meta-field input,
+.resolution-panel__meta-field textarea {
+  width: 100%;
+  padding: 8px 9px;
+  background: var(--bg2);
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  color: var(--tx);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.resolution-panel__meta-field textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
 .resolution-panel__custom-field {
   display: flex;
   flex-direction: column;
@@ -307,11 +344,20 @@
   margin-top: 14px;
   width: 100%;
   height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   background: transparent;
   border: 1px solid var(--line2);
   border-radius: var(--radius-sm);
   color: var(--tx);
   font-size: 12px;
+}
+
+.resolution-panel__resolve-custom:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .resolution-panel__resolve-custom:hover {
@@ -334,4 +380,98 @@
   margin: 0;
   color: var(--tx);
   text-align: right;
+}
+
+/* -- Compare tab ------------------------------------------------------------ */
+
+.resolution-panel__compare-tab {
+  display: flex;
+  flex-direction: column;
+}
+
+.resolution-panel__compare-select {
+  width: 100%;
+  height: 30px;
+  padding: 0 9px;
+  background: var(--bg2);
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  color: var(--tx);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.compare-diff__list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compare-diff__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line2);
+  cursor: pointer;
+}
+
+.compare-diff__row:hover {
+  background: var(--acdim);
+}
+
+.compare-diff__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--tx);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-diff__role {
+  flex-shrink: 0;
+  font-size: 9.5px;
+  color: var(--tx3);
+  text-transform: uppercase;
+}
+
+.compare-diff__status {
+  flex-shrink: 0;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line2);
+  color: var(--tx2);
+}
+
+.compare-diff__row--changed .compare-diff__status {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.compare-diff__row--dropped-in-a .compare-diff__status,
+.compare-diff__row--dropped-in-b .compare-diff__status {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.compare-diff__row--dropped-in-both {
+  opacity: 0.55;
+}
+
+.compare-diff__delta {
+  flex-basis: 100%;
+  font-size: 10px;
+  color: var(--tx2);
 }

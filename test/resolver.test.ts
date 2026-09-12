@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defineAd } from "../src/spec.js";
 import { productAd } from "../src/demoSpec.js";
-import { resolveLayout } from "../src/resolver.js";
+import { ROLE_WEIGHT, resolveLayout } from "../src/resolver.js";
 import type { ResolvedLayout } from "../src/resolver.js";
 import { broadcastLowerThird, mobileLandscape, mobilePortrait, resolveSafeArea, retailKiosk } from "../src/surfaces.js";
 import type { SurfaceProfile } from "../src/surfaces.js";
@@ -189,6 +189,94 @@ describe("resolveLayout", () => {
   });
 });
 
+describe("per-element weight override (backlog item 9)", () => {
+  it("an explicit weight equal to the role's own default produces an identical layout to leaving it unset", () => {
+    // Strongest possible regression guard: every existing spec in the app
+    // (and every one of the 16 tests above) never sets `weight` at all, so
+    // this proves elementWeight()'s fallback (`element.weight ?? ROLE_WEIGHT[role]`)
+    // is truly a no-op for that case, not just "close enough." Diagnostics'
+    // `resolvedInMs` is the one field expected to differ (real wall-clock
+    // timing from two separate calls), so it's zeroed before comparing.
+    const withExplicitDefault = defineAd({
+      elements: productAd.elements.map((el) => ({ ...el, weight: ROLE_WEIGHT[el.role] })),
+    });
+    const strip = (layout: ResolvedLayout): ResolvedLayout => ({ ...layout, diagnostics: { ...layout.diagnostics, resolvedInMs: 0 } });
+    expect(strip(resolveLayout(withExplicitDefault, mobilePortrait))).toEqual(strip(resolveLayout(productAd, mobilePortrait)));
+  });
+
+  it("gives an element more cross-axis share when its weight override exceeds its role's default", () => {
+    const evenWeights = defineAd({
+      elements: [
+        { id: "a", type: "text", role: "secondary", priority: 1, text: "A" },
+        { id: "b", type: "text", role: "secondary", priority: 1, text: "B" },
+      ],
+    });
+    const boostedA = defineAd({
+      elements: [
+        { id: "a", type: "text", role: "secondary", priority: 1, text: "A", weight: 9 },
+        { id: "b", type: "text", role: "secondary", priority: 1, text: "B" },
+      ],
+    });
+    // Portrait -> vertical axis -> the cross axis (split between "a" and
+    // "b", which share one slot/priority) is the surface's *width*.
+    const surface: SurfaceProfile = { width: 400, height: 1000 };
+
+    const evenLayout = resolveLayout(evenWeights, surface);
+    const evenA = evenLayout.visible.find((e) => e.id === "a")!;
+    const evenB = evenLayout.visible.find((e) => e.id === "b")!;
+    expect(Math.abs(evenA.width - evenB.width)).toBeLessThanOrEqual(1);
+
+    const boostedLayout = resolveLayout(boostedA, surface);
+    const boostedAEl = boostedLayout.visible.find((e) => e.id === "a")!;
+    const boostedBEl = boostedLayout.visible.find((e) => e.id === "b")!;
+    expect(boostedAEl.width).toBeGreaterThan(boostedBEl.width * 3);
+    expectNoOverlapOrOutOfBounds(boostedLayout);
+  });
+
+  it("gives a slot more main-axis share when its sole member's weight override exceeds its role's default", () => {
+    const evenWeights = defineAd({
+      elements: [
+        { id: "a", type: "text", role: "secondary", priority: 1, text: "A" },
+        { id: "b", type: "text", role: "secondary", priority: 2, text: "B" },
+      ],
+    });
+    const boostedA = defineAd({
+      elements: [
+        { id: "a", type: "text", role: "secondary", priority: 1, text: "A", weight: 9 },
+        { id: "b", type: "text", role: "secondary", priority: 2, text: "B" },
+      ],
+    });
+    // Portrait -> vertical axis -> the main axis (split between the two
+    // single-member slots) is the surface's *height*.
+    const surface: SurfaceProfile = { width: 400, height: 1000 };
+
+    const evenLayout = resolveLayout(evenWeights, surface);
+    const evenA = evenLayout.visible.find((e) => e.id === "a")!;
+    const evenB = evenLayout.visible.find((e) => e.id === "b")!;
+    expect(Math.abs(evenA.height - evenB.height)).toBeLessThanOrEqual(1);
+
+    const boostedLayout = resolveLayout(boostedA, surface);
+    const boostedAEl = boostedLayout.visible.find((e) => e.id === "a")!;
+    const boostedBEl = boostedLayout.visible.find((e) => e.id === "b")!;
+    expect(boostedAEl.height).toBeGreaterThan(boostedBEl.height * 3);
+    expectNoOverlapOrOutOfBounds(boostedLayout);
+  });
+
+  it("never changes which elements get dropped under degradation, only how survivors share the leftover space", () => {
+    // Same tight-vertical-surface scenario the existing "drops the
+    // least-important slot" test above uses (drops "logo" only, since
+    // 40+32+16=88 > 80 but 40+32=72 <= 80). Giving a *surviving* element a
+    // wildly boosted weight must not change Pass 2's drop decision — only
+    // `slotMinMainSize()` (unaffected by weight) feeds that decision.
+    const boosted = defineAd({
+      elements: productAd.elements.map((el) => (el.id === "headline" ? { ...el, weight: 50 } : el)),
+    });
+    const layout = resolveLayout(boosted, { width: 60, height: 80 });
+    expect(layout.dropped.map((d) => d.id)).toEqual(["logo"]);
+    expectNoOverlapOrOutOfBounds(layout);
+  });
+});
+
 describe("defineAd", () => {
   it("rejects an empty element list", () => {
     expect(() => defineAd({ elements: [] })).toThrow(/at least one element/);
@@ -215,6 +303,30 @@ describe("defineAd", () => {
     expect(() =>
       defineAd({ elements: [{ id: "a", type: "text", role: "primary", priority: 1, text: "   " }] }),
     ).toThrow(/empty `text`/);
+  });
+
+  it("rejects a non-positive weight override", () => {
+    expect(() =>
+      defineAd({ elements: [{ id: "a", type: "text", role: "primary", priority: 1, text: "x", weight: 0 }] }),
+    ).toThrow(/invalid weight/);
+    expect(() =>
+      defineAd({ elements: [{ id: "a", type: "text", role: "primary", priority: 1, text: "x", weight: -2 }] }),
+    ).toThrow(/invalid weight/);
+  });
+
+  it("rejects a non-finite weight override", () => {
+    expect(() =>
+      defineAd({ elements: [{ id: "a", type: "text", role: "primary", priority: 1, text: "x", weight: Infinity }] }),
+    ).toThrow(/invalid weight/);
+    expect(() =>
+      defineAd({ elements: [{ id: "a", type: "text", role: "primary", priority: 1, text: "x", weight: Number.NaN }] }),
+    ).toThrow(/invalid weight/);
+  });
+
+  it("accepts a valid positive weight override", () => {
+    expect(() =>
+      defineAd({ elements: [{ id: "a", type: "text", role: "primary", priority: 1, text: "x", weight: 5 }] }),
+    ).not.toThrow();
   });
 });
 

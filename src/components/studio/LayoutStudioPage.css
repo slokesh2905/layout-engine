@@ -58,6 +58,88 @@
   color: var(--tx);
 }
 
+.layout-studio-page__toast {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 360px;
+  padding: 10px 12px;
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-md);
+  background: var(--bg1);
+  box-shadow: var(--shadow);
+  color: var(--tx);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.layout-studio-page__toast-icon {
+  flex-shrink: 0;
+  color: var(--tx2);
+  margin-top: 1px;
+}
+
+.layout-studio-page__toast-close {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  color: var(--tx3);
+  cursor: pointer;
+}
+
+.layout-studio-page__toast-close:hover {
+  color: var(--tx);
+}
+
+/* Compare mode: two independent PreviewCanvas instances side by side,
+   each with its own ResizeObserver-driven fit scale — see
+   PreviewCanvas.tsx's own doc comment on why that's safe to just double
+   up rather than needing any coordination between the two. */
+.layout-studio-page__compare-stage {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 1px;
+  background: var(--line);
+}
+
+.layout-studio-page__compare-pane {
+  flex: 1 1 50%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.layout-studio-page__compare-pane .preview-canvas {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.layout-studio-page__compare-pane-label {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx3);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (max-width: 720px) {
+  .layout-studio-page__compare-stage {
+    flex-direction: column;
+  }
+}
+
 .layout-studio-page__dock {
   position: absolute;
   left: 0;

@@ -1,3 +1,47 @@
+.specs-page__import-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin-strong);
+  background: transparent;
+  color: var(--ink-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.specs-page__import-btn:hover {
+  background: var(--ink-800);
+}
+
+.specs-page__file-input {
+  display: none;
+}
+
+.specs-page__import-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 20px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: var(--border-thin);
+  background: var(--ink-900);
+  color: var(--ink-text);
+  font-size: 12px;
+}
+
+.specs-page__import-error button {
+  margin-left: auto;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  color: var(--ink-text-faint);
+  cursor: pointer;
+}
+
 .specs-page {
   flex: 1 1 auto;
   min-height: 0;

@@ -16,8 +16,8 @@
 .spec-inspector__row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 9px;
+  gap: 6px;
+  padding: 6px 8px;
   border-radius: var(--radius-md);
   cursor: pointer;
   background: transparent;
@@ -41,8 +41,25 @@
   opacity: 0.48;
 }
 
+/* Prevent flicker from dragenter/leave firing on child elements */
+.spec-inspector__list--dragging .spec-inspector__row * {
+  pointer-events: none;
+}
+
+.spec-inspector__row--dragging {
+  opacity: 0.4;
+  background: var(--bg2);
+}
+
+.spec-inspector__row--drag-over {
+  background: var(--acdim);
+  border-color: var(--cyan);
+}
+
 .spec-inspector__drag-handle {
   display: inline-flex;
+  padding: 4px;
+  margin: -4px;
   color: var(--tx3);
   cursor: grab;
 }
@@ -54,19 +71,120 @@
   flex: 1 1 auto;
 }
 
-.spec-inspector__row-content {
-  font-size: 12.5px;
+.spec-inspector__content-input {
+  width: 100%;
+  font-size: 11.5px;
+  font-family: inherit;
   color: var(--tx);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 1px 3px;
+  margin: -1px -3px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  cursor: text;
+}
+
+.spec-inspector__content-input:hover {
+  border-color: var(--line2);
+}
+
+.spec-inspector__content-input:focus {
+  outline: none;
+  border-color: var(--tx3);
+  background: var(--bg1);
 }
 
 .spec-inspector__row-meta {
-  font-size: 9.5px;
+  font-size: 9px;
   color: var(--tx3);
   letter-spacing: 0.04em;
-  margin-top: 2px;
+  margin-top: 1px;
+}
+
+/* Per-element weight override (backlog item 9) — a compact numeric field,
+   the same visual weight as the small icon buttons beside it rather than
+   the full-width content input, since a weight is a short number, not
+   prose. Empty (placeholder showing the role's own default) means "use
+   the default"; typing a value overrides it — see resolver.ts's
+   elementWeight() and LayoutStudioPage.tsx's handleUpdateWeight. */
+.spec-inspector__weight-input {
+  flex-shrink: 0;
+  width: 40px;
+  font-size: 11px;
+  text-align: center;
+  color: var(--tx);
+  background: transparent;
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+  padding: 3px 2px;
+}
+
+.spec-inspector__weight-input::placeholder {
+  color: var(--tx3);
+}
+
+.spec-inspector__weight-input:hover {
+  border-color: var(--tx3);
+}
+
+.spec-inspector__weight-input:focus {
+  outline: none;
+  border-color: var(--tx3);
+  background: var(--bg1);
+}
+
+/* Chrome/Safari/Edge's spinner arrows crowd a 40px-wide field and aren't
+   needed — the min/step attributes still work via typing and the arrow
+   keys once focused. */
+.spec-inspector__weight-input::-webkit-outer-spin-button,
+.spec-inspector__weight-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.spec-inspector__upload-btn {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+  color: var(--tx2);
+}
+
+.spec-inspector__upload-btn:hover {
+  color: var(--tx);
+  border-color: var(--tx3);
+}
+
+.spec-inspector__upload-input {
+  display: none;
+}
+
+.spec-inspector__remove-btn {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--tx3);
+}
+
+.spec-inspector__remove-btn:hover:not(:disabled) {
+  color: var(--red);
+  border-color: var(--line2);
+}
+
+.spec-inspector__remove-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .spec-inspector__badge {
@@ -86,15 +204,42 @@
   opacity: 0.7;
 }
 
+.spec-inspector__history-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.spec-inspector__history-btn {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+  color: var(--tx2);
+}
+
+.spec-inspector__history-btn:hover:not(:disabled) {
+  color: var(--tx);
+  border-color: var(--tx3);
+}
+
+.spec-inspector__history-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .spec-inspector__reset {
-  margin-top: 6px;
-  width: 100%;
-  height: 28px;
+  flex: 1 1 auto;
+  height: 24px;
   background: transparent;
   border: 1px dashed var(--line2);
   border-radius: var(--radius-sm);
   color: var(--tx2);
-  font-size: 11.5px;
+  font-size: 11px;
 }
 
 .spec-inspector__reset:hover {
@@ -102,20 +247,106 @@
 }
 
 .spec-inspector__eyebrow {
-  margin-top: 20px;
-  font-size: 10px;
+  margin-top: 14px;
+  font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--tx3);
 }
 
+.spec-inspector__add-form {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spec-inspector__add-row {
+  display: flex;
+  gap: 6px;
+}
+
+.spec-inspector__add-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 24px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--tx);
+  background: var(--bg1);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
+}
+
+.spec-inspector__add-priority {
+  width: 40px;
+  flex-shrink: 0;
+  height: 24px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--tx);
+  background: var(--bg1);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
+  text-align: center;
+}
+
+.spec-inspector__add-content {
+  width: 100%;
+  height: 24px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--tx);
+  background: var(--bg1);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+  padding: 0 7px;
+}
+
+.spec-inspector__add-upload {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  font-size: 10.5px;
+  color: var(--tx2);
+  background: transparent;
+  border: 1px dashed var(--line2);
+  border-radius: var(--radius-sm);
+  padding: 0 8px;
+}
+
+.spec-inspector__add-upload:hover {
+  color: var(--tx);
+}
+
+.spec-inspector__add-submit {
+  height: 26px;
+  font-size: 11px;
+  color: var(--tx);
+  background: var(--acdim);
+  border: 1px solid var(--line2);
+  border-radius: var(--radius-sm);
+}
+
+.spec-inspector__add-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spec-inspector__add-submit:hover:not(:disabled) {
+  border-color: var(--tx3);
+}
+
 .spec-inspector__degradation-order {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 4px;
 }
 
 .spec-inspector__degradation-step {
@@ -145,6 +376,10 @@
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.spec-inspector__degradation-verb--reduce {
+  color: var(--amber);
 }
 
 .spec-inspector__degradation-label {
